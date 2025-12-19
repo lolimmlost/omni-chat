@@ -1,0 +1,16 @@
+{
+  "name": "omni-chat",
+  "version": "1.0.0",
+  "description": "Unified live chat server with AI fallback via Ollama",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "cli": "node admin/cli.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2",
+    "socket.io-client": "^4.8.1"
+  }
+}

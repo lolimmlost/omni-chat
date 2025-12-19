@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Omni-Chat Admin</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="auth-screen">
+    <div class="auth-box">
+      <h1>Omni-Chat</h1>
+      <p>Enter admin token to continue</p>
+      <input type="password" id="token-input" placeholder="Admin token" autofocus>
+      <button id="auth-btn">Login</button>
+      <p id="auth-error" class="error"></p>
+    </div>
+  </div>
+
+  <div id="app" class="hidden">
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <h2>Sessions</h2>
+        <span id="session-count">0</span>
+      </div>
+      <div class="search-box">
+        <input type="text" id="session-search" placeholder="Search sessions... (Ctrl+K)">
+        <select id="session-filter">
+          <option value="all">All</option>
+          <option value="waiting_human">Waiting</option>
+          <option value="active">Active</option>
+        </select>
+      </div>
+      <ul id="session-list"></ul>
+      <div class="sidebar-actions">
+        <button id="clear-inactive-btn" class="sidebar-btn" title="Close sessions inactive for 5+ min">Clear Inactive</button>
+        <button id="clear-all-btn" class="sidebar-btn danger" title="Close all sessions">Clear All</button>
+      </div>
+      <div class="sidebar-actions">
+        <button id="export-json-btn" class="sidebar-btn" title="Export as JSON">Export JSON</button>
+        <button id="export-csv-btn" class="sidebar-btn" title="Export as CSV">Export CSV</button>
+        <button id="sound-toggle-btn" class="sidebar-btn" title="Toggle sound">Sound</button>
+      </div>
+      <div class="sidebar-actions">
+        <button id="canned-responses-btn" class="sidebar-btn" title="Manage saved responses">Canned Responses</button>
+        <a href="/admin/analytics/" class="sidebar-btn" style="text-decoration:none;text-align:center;">Analytics</a>
+      </div>
+    </aside>
+
+    <div id="canned-modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Canned Responses</h3>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="canned-add-form">
+            <input type="text" id="canned-text" placeholder="Response text...">
+            <select id="canned-category">
+              <option value="general">General</option>
+              <option value="greeting">Greeting</option>
+              <option value="closing">Closing</option>
+              <option value="support">Support</option>
+              <option value="sales">Sales</option>
+            </select>
+            <button id="add-canned-btn">Add</button>
+          </div>
+          <div id="canned-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <main id="chat-area">
+      <div id="no-session">
+        <p>Select a session from the sidebar to view the conversation</p>
+      </div>
+
+      <div id="chat-view" class="hidden">
+        <header id="chat-header">
+          <div class="header-info">
+            <span id="chat-site"></span>
+            <span id="chat-status"></span>
+            <span id="chat-timer" class="timer"></span>
+          </div>
+          <div class="header-actions">
+            <button id="visitor-info-btn" class="header-btn" title="View visitor info">Info</button>
+            <button id="session-meta-btn" class="header-btn" title="Notes & Tags">Notes</button>
+            <button id="close-contact-btn" class="header-btn" title="Send contact info and close">Close + Contact</button>
+            <button id="close-session-btn" class="header-btn danger">Close</button>
+          </div>
+        </header>
+        <div id="visitor-info-panel" class="hidden">
+          <div class="info-row"><span>Page:</span> <span id="info-page"></span></div>
+          <div class="info-row"><span>Referrer:</span> <span id="info-referrer"></span></div>
+          <div class="info-row"><span>Browser:</span> <span id="info-browser"></span></div>
+          <div class="info-row"><span>IP:</span> <span id="info-ip"></span></div>
+        </div>
+
+        <div id="session-feedback" class="hidden"></div>
+
+        <div id="session-meta-panel" class="hidden">
+          <div class="meta-section">
+            <label>Notes</label>
+            <textarea id="session-notes" placeholder="Add notes about this session..."></textarea>
+          </div>
+          <div class="meta-section">
+            <label>Tags</label>
+            <div id="session-tags"></div>
+            <div class="tag-input-row">
+              <input type="text" id="tag-input" placeholder="Add tag..." maxlength="20">
+              <button id="add-tag-btn">+</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="messages"></div>
+        <div id="typing-indicator" class="hidden">Visitor is typing...</div>
+
+        <div id="suggested-replies" class="hidden">
+          <div class="suggested-header">
+            <span>AI Suggestions</span>
+            <button id="refresh-suggestions-btn" title="Get new suggestions">↻</button>
+          </div>
+          <div id="suggested-list"></div>
+        </div>
+
+        <div id="quick-responses">
+          <button class="quick-btn" data-msg="Hi! How can I help you today?">Greeting</button>
+          <button class="quick-btn" data-msg="Thanks for reaching out! Let me look into that for you.">Thanks</button>
+          <button class="quick-btn" data-msg="Could you provide more details about what you're looking for?">More Info</button>
+          <button class="quick-btn" data-msg="Check out the Projects section to see examples of my work.">Projects</button>
+          <button class="quick-btn" data-msg="Feel free to use the contact form for detailed inquiries!">Contact</button>
+          <button class="quick-btn" data-msg="I'll get back to you shortly with more information.">BRB</button>
+        </div>
+
+        <div id="input-area">
+          <input type="text" id="message-input" placeholder="Type your response...">
+          <button id="send-btn">Send</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
