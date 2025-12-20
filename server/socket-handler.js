@@ -28,6 +28,43 @@ function getClientIp(socket) {
     || 'unknown';
 }
 
+function parseDevice(ua) {
+  if (!ua) return { type: 'unknown', browser: 'Unknown', browserVersion: '', os: 'Unknown' };
+
+  const device = {
+    type: /Mobile|Android|iPhone|iPad|iPod/i.test(ua) ?
+          (/iPad|Tablet|PlayBook/i.test(ua) ? 'tablet' : 'mobile') : 'desktop',
+    browser: 'Unknown',
+    browserVersion: '',
+    os: 'Unknown'
+  };
+
+  // Browser detection (order matters - check Edge before Chrome, Chrome before Safari)
+  if (/Edg\/(\d+)/.test(ua)) {
+    device.browser = 'Edge';
+    device.browserVersion = ua.match(/Edg\/(\d+)/)?.[1] || '';
+  } else if (/Firefox\/(\d+)/.test(ua)) {
+    device.browser = 'Firefox';
+    device.browserVersion = ua.match(/Firefox\/(\d+)/)?.[1] || '';
+  } else if (/Chrome\/(\d+)/.test(ua)) {
+    device.browser = 'Chrome';
+    device.browserVersion = ua.match(/Chrome\/(\d+)/)?.[1] || '';
+  } else if (/Safari\/(\d+)/.test(ua) && !/Chrome/.test(ua)) {
+    device.browser = 'Safari';
+    device.browserVersion = ua.match(/Version\/(\d+)/)?.[1] || '';
+  }
+
+  // OS detection
+  if (/Windows NT 10/.test(ua)) { device.os = 'Windows 10+'; }
+  else if (/Windows/.test(ua)) { device.os = 'Windows'; }
+  else if (/Mac OS X/.test(ua)) { device.os = 'macOS'; }
+  else if (/Android/.test(ua)) { device.os = 'Android'; }
+  else if (/iPhone|iPad|iPod/.test(ua)) { device.os = 'iOS'; }
+  else if (/Linux/.test(ua)) { device.os = 'Linux'; }
+
+  return device;
+}
+
 function setupSocketHandlers(io) {
   io.on('connection', (socket) => {
     const clientIp = getClientIp(socket);
@@ -48,12 +85,23 @@ function setupSocketHandlers(io) {
 
     socket.on('visitor:join', (data) => {
       const siteId = sanitizeSiteId(data?.siteId);
+      const userAgent = typeof data?.userAgent === 'string' ? data.userAgent.slice(0, 500) : '';
       const visitorInfo = {
         pageUrl: typeof data?.pageUrl === 'string' ? data.pageUrl.slice(0, 500) : '',
         pageTitle: typeof data?.pageTitle === 'string' ? data.pageTitle.slice(0, 200) : '',
         referrer: typeof data?.referrer === 'string' ? data.referrer.slice(0, 500) : '',
-        userAgent: typeof data?.userAgent === 'string' ? data.userAgent.slice(0, 500) : '',
-        ip: clientIp
+        userAgent,
+        ip: clientIp,
+        screen: data?.screen && typeof data.screen.width === 'number' ? {
+          width: data.screen.width,
+          height: data.screen.height
+        } : null,
+        viewport: data?.viewport && typeof data.viewport.width === 'number' ? {
+          width: data.viewport.width,
+          height: data.viewport.height
+        } : null,
+        language: typeof data?.language === 'string' ? data.language.slice(0, 20) : '',
+        device: parseDevice(userAgent)
       };
       const session = store.createSession(siteId, visitorInfo);
       visitorSockets.set(socket.id, session.id);
@@ -222,6 +270,26 @@ function setupSocketHandlers(io) {
         io.to('admins').emit('admin:typing', { sessionId, role: 'visitor', isTyping: false });
       }, 3000);
       typingTimers.set(sessionId, timers);
+    });
+
+    socket.on('visitor:page-change', (data) => {
+      const sessionId = visitorSockets.get(socket.id);
+      if (!sessionId) return;
+
+      const pageData = {
+        url: typeof data?.url === 'string' ? data.url : '',
+        title: typeof data?.title === 'string' ? data.title : ''
+      };
+
+      const visit = store.addPageVisit(sessionId, pageData);
+      if (visit) {
+        // Notify admins of page change
+        io.to('admins').emit('admin:visitor-page-change', {
+          sessionId,
+          page: visit
+        });
+        console.log(`Visitor navigated: session ${sessionId} -> ${visit.url}`);
+      }
     });
 
     // ─────────────────────────────────────────

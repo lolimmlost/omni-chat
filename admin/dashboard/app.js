@@ -36,10 +36,15 @@ const clearAllBtn = document.getElementById('clear-all-btn');
 const typingIndicator = document.getElementById('typing-indicator');
 const visitorInfoBtn = document.getElementById('visitor-info-btn');
 const visitorInfoPanel = document.getElementById('visitor-info-panel');
-const infoPage = document.getElementById('info-page');
-const infoReferrer = document.getElementById('info-referrer');
+const infoDevice = document.getElementById('info-device');
 const infoBrowser = document.getElementById('info-browser');
+const infoOs = document.getElementById('info-os');
+const infoScreen = document.getElementById('info-screen');
+const infoLanguage = document.getElementById('info-language');
 const infoIp = document.getElementById('info-ip');
+const infoReferrer = document.getElementById('info-referrer');
+const infoPageCount = document.getElementById('info-page-count');
+const infoPageJourney = document.getElementById('info-page-journey');
 const sessionSearch = document.getElementById('session-search');
 const sessionFilter = document.getElementById('session-filter');
 const sessionMetaBtn = document.getElementById('session-meta-btn');
@@ -325,6 +330,29 @@ socket.on('admin:session-status', (data) => {
 socket.on('admin:visitor-disconnected', (data) => {
   if (sessions[data.sessionId]) {
     sessions[data.sessionId].visitorDisconnected = true;
+  }
+});
+
+socket.on('admin:visitor-page-change', (data) => {
+  const { sessionId, page } = data;
+  if (!sessions[sessionId]) return;
+
+  // Initialize visitorInfo if needed
+  if (!sessions[sessionId].visitorInfo) {
+    sessions[sessionId].visitorInfo = {};
+  }
+  if (!sessions[sessionId].visitorInfo.pageJourney) {
+    sessions[sessionId].visitorInfo.pageJourney = [];
+  }
+
+  // Add the new page visit
+  sessions[sessionId].visitorInfo.pageJourney.push(page);
+  sessions[sessionId].visitorInfo.pageUrl = page.url;
+  sessions[sessionId].visitorInfo.pageTitle = page.title;
+
+  // Update UI if viewing this session
+  if (sessionId === currentSessionId) {
+    renderPageJourney(sessions[sessionId].visitorInfo.pageJourney);
   }
 });
 
@@ -725,19 +753,60 @@ function updateVisitorInfo() {
     return;
   }
   const info = session.visitorInfo;
-  infoPage.textContent = info.pageUrl || info.pageTitle || 'Unknown';
-  infoReferrer.textContent = info.referrer || 'Direct';
-  infoBrowser.textContent = parseUserAgent(info.userAgent);
+
+  // Device info
+  const device = info.device || {};
+  const deviceIcons = { desktop: '🖥️', mobile: '📱', tablet: '📱', unknown: '❓' };
+  infoDevice.innerHTML = `<span class="device-icon">${deviceIcons[device.type] || deviceIcons.unknown}</span>${device.type || 'Unknown'}`;
+
+  // Browser
+  const browserVersion = device.browserVersion ? ` ${device.browserVersion}` : '';
+  infoBrowser.textContent = (device.browser || 'Unknown') + browserVersion;
+
+  // OS
+  infoOs.textContent = device.os || 'Unknown';
+
+  // Screen
+  if (info.screen && info.viewport) {
+    infoScreen.textContent = `${info.screen.width}×${info.screen.height} (viewport: ${info.viewport.width}×${info.viewport.height})`;
+  } else if (info.screen) {
+    infoScreen.textContent = `${info.screen.width}×${info.screen.height}`;
+  } else {
+    infoScreen.textContent = 'Unknown';
+  }
+
+  // Language
+  infoLanguage.textContent = info.language || 'Unknown';
+
+  // IP
   infoIp.textContent = info.ip || 'Unknown';
+
+  // Referrer
+  infoReferrer.textContent = info.referrer || 'Direct';
+
+  // Page Journey
+  renderPageJourney(info.pageJourney || []);
 }
 
-function parseUserAgent(ua) {
-  if (!ua) return 'Unknown';
-  if (ua.includes('Chrome')) return 'Chrome';
-  if (ua.includes('Firefox')) return 'Firefox';
-  if (ua.includes('Safari')) return 'Safari';
-  if (ua.includes('Edge')) return 'Edge';
-  return ua.slice(0, 50);
+function renderPageJourney(journey) {
+  infoPageCount.textContent = journey.length;
+
+  if (journey.length === 0) {
+    infoPageJourney.innerHTML = '<div style="color:#666;font-size:0.75rem;">No pages visited yet</div>';
+    return;
+  }
+
+  // Show in reverse order (most recent first)
+  infoPageJourney.innerHTML = journey.slice().reverse().map(page => {
+    const time = new Date(page.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const urlPath = page.url.replace(/^https?:\/\/[^\/]+/, '') || '/';
+    return `
+      <div class="page-visit">
+        <span class="page-visit-time">${time}</span>
+        <span class="page-visit-url" title="${escapeHtml(page.url)}">${escapeHtml(urlPath)}</span>
+      </div>
+    `;
+  }).join('');
 }
 
 // Close session

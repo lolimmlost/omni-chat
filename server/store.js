@@ -39,7 +39,16 @@ function createSession(siteId, visitorInfo = {}) {
       pageTitle: visitorInfo.pageTitle || '',
       referrer: visitorInfo.referrer || '',
       userAgent: visitorInfo.userAgent || '',
-      ip: visitorInfo.ip || ''
+      ip: visitorInfo.ip || '',
+      screen: visitorInfo.screen || null,
+      viewport: visitorInfo.viewport || null,
+      language: visitorInfo.language || '',
+      device: visitorInfo.device || null,
+      pageJourney: visitorInfo.pageUrl ? [{
+        url: visitorInfo.pageUrl,
+        title: visitorInfo.pageTitle || '',
+        timestamp: Date.now()
+      }] : []
     }
   };
   sessions.set(session.id, session);
@@ -158,6 +167,36 @@ function deleteSession(sessionId) {
   return sessions.delete(sessionId);
 }
 
+function addPageVisit(sessionId, pageData) {
+  const session = sessions.get(sessionId);
+  if (!session || !session.visitorInfo) return null;
+
+  const journey = session.visitorInfo.pageJourney || [];
+  const lastPage = journey[journey.length - 1];
+
+  // Deduplicate consecutive visits to same URL
+  if (lastPage && lastPage.url === pageData.url) return null;
+
+  const visit = {
+    url: typeof pageData.url === 'string' ? pageData.url.slice(0, 500) : '',
+    title: typeof pageData.title === 'string' ? pageData.title.slice(0, 200) : '',
+    timestamp: Date.now()
+  };
+
+  journey.push(visit);
+
+  // Keep max 50 pages to prevent memory bloat
+  if (journey.length > 50) {
+    journey.shift();
+  }
+
+  session.visitorInfo.pageJourney = journey;
+  session.visitorInfo.pageUrl = visit.url;
+  session.visitorInfo.pageTitle = visit.title;
+
+  return visit;
+}
+
 // Cleanup old sessions periodically
 function cleanupSessions() {
   const now = Date.now();
@@ -190,5 +229,6 @@ module.exports = {
   closeSession,
   setFeedback,
   setSessionMeta,
-  deleteSession
+  deleteSession,
+  addPageVisit
 };

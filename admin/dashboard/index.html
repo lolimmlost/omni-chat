@@ -90,10 +90,24 @@
           </div>
         </header>
         <div id="visitor-info-panel" class="hidden">
-          <div class="info-row"><span>Page:</span> <span id="info-page"></span></div>
-          <div class="info-row"><span>Referrer:</span> <span id="info-referrer"></span></div>
-          <div class="info-row"><span>Browser:</span> <span id="info-browser"></span></div>
-          <div class="info-row"><span>IP:</span> <span id="info-ip"></span></div>
+          <div class="info-section">
+            <div class="info-row"><span>Device:</span> <span id="info-device"></span></div>
+            <div class="info-row"><span>Browser:</span> <span id="info-browser"></span></div>
+            <div class="info-row"><span>OS:</span> <span id="info-os"></span></div>
+            <div class="info-row"><span>Screen:</span> <span id="info-screen"></span></div>
+            <div class="info-row"><span>Language:</span> <span id="info-language"></span></div>
+            <div class="info-row"><span>IP:</span> <span id="info-ip"></span></div>
+          </div>
+          <div class="info-section">
+            <div class="info-row"><span>Referrer:</span> <span id="info-referrer"></span></div>
+          </div>
+          <div class="info-section">
+            <div class="info-header">
+              <span>Page Journey</span>
+              <span id="info-page-count" class="badge">0</span>
+            </div>
+            <div id="info-page-journey"></div>
+          </div>
         </div>
 
         <div id="session-feedback" class="hidden"></div>

@@ -46,7 +46,16 @@
         pageUrl: window.location.href,
         pageTitle: document.title,
         referrer: document.referrer,
-        userAgent: navigator.userAgent
+        userAgent: navigator.userAgent,
+        screen: {
+          width: window.screen.width,
+          height: window.screen.height
+        },
+        viewport: {
+          width: window.innerWidth,
+          height: window.innerHeight
+        },
+        language: navigator.language || navigator.userLanguage || ''
       });
     });
 
@@ -120,6 +129,39 @@
       });
       renderMessages();
     });
+
+    // Page journey tracking
+    let lastTrackedUrl = window.location.href;
+
+    function trackPageChange() {
+      const currentUrl = window.location.href;
+      if (currentUrl !== lastTrackedUrl && sessionId) {
+        lastTrackedUrl = currentUrl;
+        socket.emit('visitor:page-change', {
+          url: currentUrl,
+          title: document.title
+        });
+      }
+    }
+
+    // Track History API navigation (SPA)
+    const originalPushState = history.pushState;
+    history.pushState = function() {
+      originalPushState.apply(this, arguments);
+      setTimeout(trackPageChange, 0);
+    };
+
+    const originalReplaceState = history.replaceState;
+    history.replaceState = function() {
+      originalReplaceState.apply(this, arguments);
+      setTimeout(trackPageChange, 0);
+    };
+
+    // Track back/forward navigation
+    window.addEventListener('popstate', trackPageChange);
+
+    // Fallback: periodic check for URL changes
+    setInterval(trackPageChange, 2000);
 
     createUI();
   }
