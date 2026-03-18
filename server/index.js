@@ -7,6 +7,7 @@ const path = require('path');
 const { setupSocketHandlers } = require('./socket-handler');
 
 const { checkModelAvailability } = require('./ollama');
+const email = require('./email');
 
 const PORT = process.env.PORT || 3100;
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
@@ -74,6 +75,9 @@ server.listen(PORT, async () => {
 ║  CLI Admin:  npm run cli                              ║
 ╚═══════════════════════════════════════════════════════╝
   `);
+
+  // Init email notifications
+  email.init();
 
   // Check Ollama availability
   const ollamaStatus = await checkModelAvailability();

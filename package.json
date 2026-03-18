@@ -3,13 +3,25 @@
   "version": "1.0.0",
   "description": "Unified live chat server with AI fallback via Ollama",
   "main": "server/index.js",
+  "type": "module",
   "scripts": {
     "start": "node server/index.js",
-    "cli": "node admin/cli.js"
+    "cli": "node admin/cli.js",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "node server/db/migrate.js",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "node server/db/seed.js",
+    "test:db": "node test-db-connection.js"
   },
   "dependencies": {
     "dotenv": "^16.3.1",
+    "drizzle-kit": "^0.31.8",
+    "drizzle-orm": "^0.45.1",
     "express": "^4.18.2",
+    "nanoid": "^5.1.6",
+    "postgres": "^3.4.7",
+    "resend": "^6.9.4",
     "socket.io": "^4.7.2",
     "socket.io-client": "^4.8.1"
   }

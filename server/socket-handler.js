@@ -2,6 +2,7 @@ const store = require('./store');
 const { verifyToken } = require('./auth');
 const { streamResponse, generateQuickReplies } = require('./ollama');
 const { notifyNewSession, notifyWaitingHuman, notifyMessage } = require('./webhooks');
+const email = require('./email');
 const cannedResponses = require('./canned-responses');
 const analytics = require('./analytics');
 const {
@@ -172,8 +173,11 @@ function setupSocketHandlers(io) {
       });
       socket.emit('status', { status: 'waiting_human' });
 
-      // Webhook notification
-      if (session) notifyWaitingHuman(session);
+      // Webhook + email notification
+      if (session) {
+        notifyWaitingHuman(session);
+        email.notifyHumanRequested(session);
+      }
 
       console.log(`Session ${sessionId} waiting for human`);
     });
