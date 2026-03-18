@@ -53,6 +53,11 @@ app.use('/admin/analytics', express.static(path.join(__dirname, '..', 'admin', '
 app.use('/admin', express.static(path.join(__dirname, '..', 'admin', 'dashboard')));
 app.use('/widget', express.static(path.join(__dirname, '..', 'widget')));
 
+// Root -> serve dashboard directly
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'admin', 'dashboard', 'index.html'));
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: Date.now() });

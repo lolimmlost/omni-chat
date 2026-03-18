@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Unified live chat server with AI fallback via Ollama",
   "main": "server/index.js",
-  "type": "module",
   "scripts": {
     "start": "node server/index.js",
     "cli": "node admin/cli.js",
