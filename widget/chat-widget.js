@@ -34,6 +34,7 @@
   let messageQueue = JSON.parse(sessionStorage.getItem('omni-chat-queue') || '[]');
   const MAX_QUEUE_SIZE = 10;
   let adminStatus = 'offline';
+  let chatMode = null; // null = undecided, 'ai' = auto-ask AI, 'human' = waiting for human
   const COMMON_EMOJIS = ['😊', '👍', '👋', '🙏', '❤️', '😂', '🎉', '✨', '🔥', '💯', '😢', '😡', '🤔', '👀', '📧', '📞'];
 
   function initWidget() {
@@ -68,6 +69,8 @@
     socket.on('message', (msg) => {
       // Only add non-visitor messages (visitor messages added locally in sendMessage)
       if (msg.role !== 'visitor') {
+        // If admin replies, switch to human mode
+        if (msg.role === 'admin') chatMode = 'human';
         messages.push(msg);
         renderMessages();
         if (!isOpen) {
@@ -280,124 +283,129 @@
         position: fixed;
         ${position.includes('right') ? 'right: 20px;' : 'left: 20px;'}
         ${position.includes('bottom') ? 'bottom: 20px;' : 'top: 20px;'}
-        width: 60px;
-        height: 60px;
+        width: 52px;
+        height: 52px;
         border-radius: 50%;
-        background: ${primaryColor};
+        background: #18181b;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        box-shadow: 0 2px 12px rgba(0,0,0,0.25);
         transition: transform 0.2s, box-shadow 0.2s;
         z-index: 99999;
+        border: 1px solid #2a2a2e;
       }
       #omni-chat-bubble:hover {
-        transform: scale(1.1);
-        box-shadow: 0 6px 24px rgba(0,0,0,0.4);
+        transform: scale(1.05);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.35);
       }
-      #omni-chat-bubble svg { width: 28px; height: 28px; fill: white; }
+      #omni-chat-bubble svg { width: 22px; height: 22px; fill: #a1a1aa; }
       #omni-chat-bubble .notification {
         position: absolute;
-        top: -4px;
-        right: -4px;
-        width: 16px;
-        height: 16px;
-        background: #ff4757;
+        top: -2px;
+        right: -2px;
+        width: 12px;
+        height: 12px;
+        background: #ef4444;
         border-radius: 50%;
-        border: 2px solid #1a1a2e;
+        border: 2px solid #18181b;
         display: none;
       }
       #omni-chat-window {
         position: fixed;
         ${position.includes('right') ? 'right: 20px;' : 'left: 20px;'}
-        ${position.includes('bottom') ? 'bottom: 90px;' : 'top: 90px;'}
-        width: 380px;
+        ${position.includes('bottom') ? 'bottom: 82px;' : 'top: 82px;'}
+        width: 370px;
         max-width: calc(100vw - 40px);
-        height: 520px;
-        max-height: calc(100vh - 120px);
-        background: #1a1a2e;
-        border-radius: 16px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        height: 500px;
+        max-height: calc(100vh - 110px);
+        background: #18181b;
+        border-radius: 12px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.4);
         display: none;
         flex-direction: column;
         overflow: hidden;
         z-index: 99998;
+        border: 1px solid #27272a;
       }
       #omni-chat-window.open { display: flex; }
       #omni-chat-header {
-        background: ${primaryColor};
-        color: white;
-        padding: 1rem 1.25rem;
-        font-weight: 600;
-        font-size: 15px;
+        background: #18181b;
+        color: #e4e4e7;
+        padding: 0.875rem 1rem;
+        font-weight: 500;
+        font-size: 14px;
         display: flex;
         justify-content: space-between;
         align-items: center;
         flex-shrink: 0;
+        border-bottom: 1px solid #27272a;
       }
       #omni-chat-header .close-btn {
-        background: rgba(255,255,255,0.2);
+        background: none;
         border: none;
         width: 28px;
         height: 28px;
-        border-radius: 50%;
-        font-size: 18px;
+        border-radius: 6px;
+        font-size: 16px;
         cursor: pointer;
-        color: white;
+        color: #71717a;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: background 0.2s;
+        transition: background 0.15s, color 0.15s;
       }
       #omni-chat-header .close-btn:hover {
-        background: rgba(255,255,255,0.3);
+        background: #27272a;
+        color: #e4e4e7;
       }
       .omni-header-btns {
         display: flex;
-        gap: 0.5rem;
+        gap: 2px;
         align-items: center;
       }
       .omni-header-btn {
-        background: rgba(255,255,255,0.2);
+        background: none;
         border: none;
         width: 28px;
         height: 28px;
-        border-radius: 50%;
+        border-radius: 6px;
         cursor: pointer;
-        color: white;
+        color: #71717a;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: background 0.2s;
+        transition: background 0.15s, color 0.15s;
       }
       .omni-header-btn:hover {
-        background: rgba(255,255,255,0.3);
+        background: #27272a;
+        color: #e4e4e7;
       }
       #omni-chat-messages {
         flex: 1;
-        padding: 1.5rem;
+        padding: 1.25rem 1rem;
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        gap: 1rem;
-        background: #12121f;
+        gap: 0.625rem;
+        background: #0f0f12;
       }
-      #omni-chat-messages::-webkit-scrollbar { width: 6px; }
+      #omni-chat-messages::-webkit-scrollbar { width: 4px; }
       #omni-chat-messages::-webkit-scrollbar-track { background: transparent; }
-      #omni-chat-messages::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+      #omni-chat-messages::-webkit-scrollbar-thumb { background: #27272a; border-radius: 2px; }
       .omni-msg {
-        max-width: 80%;
-        padding: 0.875rem 1.125rem;
-        border-radius: 16px;
-        font-size: 14px;
+        max-width: 82%;
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        font-size: 13.5px;
         line-height: 1.5;
         word-wrap: break-word;
         overflow-wrap: break-word;
       }
       .omni-msg.visitor {
-        background: #333;
-        color: #fff;
+        background: #27272a;
+        color: #e4e4e7;
         align-self: flex-end;
         border-bottom-right-radius: 4px;
         position: relative;
@@ -405,54 +413,57 @@
       .read-status {
         display: inline-block;
         font-size: 10px;
-        color: #888;
-        margin-left: 6px;
+        color: #52525b;
+        margin-left: 4px;
         vertical-align: middle;
       }
       .omni-msg.visitor .read-status {
-        color: #00d9ff;
+        color: #71717a;
       }
       .omni-msg.admin {
-        background: ${primaryColor};
-        color: white;
+        background: #1e3a5f;
+        color: #e4e4e7;
         align-self: flex-start;
         border-bottom-left-radius: 4px;
       }
       .omni-msg.ai {
-        background: linear-gradient(135deg, #7c3aed, #6366f1);
-        color: white;
+        background: #1c1c24;
+        color: #d4d4d8;
         align-self: flex-start;
         border-bottom-left-radius: 4px;
+        border: 1px solid #27272a;
       }
       .omni-msg.system {
         background: transparent;
-        color: #666;
+        color: #52525b;
         font-size: 12px;
         text-align: center;
         align-self: center;
-        padding: 0.5rem;
+        padding: 0.375rem;
       }
       .omni-msg.streaming::after {
-        content: '▋';
+        content: '\\25CB';
         animation: blink 0.8s infinite;
-        margin-left: 2px;
+        margin-left: 3px;
+        color: #52525b;
       }
       @keyframes blink { 50% { opacity: 0; } }
       #omni-chat-status {
         text-align: center;
         font-size: 12px;
-        color: #888;
-        padding: 0.5rem 1rem;
-        background: #16213e;
+        color: #71717a;
+        padding: 0.375rem 1rem;
+        background: #18181b;
         display: none;
         flex-shrink: 0;
+        border-top: 1px solid #27272a;
       }
       #omni-chat-status.show { display: block; }
       #omni-typing-indicator {
         display: none;
-        padding: 0.5rem 1rem;
+        padding: 0.375rem 1rem;
         font-size: 12px;
-        color: #888;
+        color: #71717a;
       }
       #omni-typing-indicator .dots {
         display: inline-block;
@@ -465,86 +476,114 @@
       #omni-typing-indicator .dots span:nth-child(3) { animation-delay: 0.4s; }
       @keyframes typingDot {
         0%, 60%, 100% { transform: translateY(0); }
-        30% { transform: translateY(-4px); }
+        30% { transform: translateY(-3px); }
       }
       /* Light theme */
       #omni-chat-window[data-theme="light"] {
         background: #fff;
+        border-color: #e4e4e7;
       }
+      #omni-chat-window[data-theme="light"] #omni-chat-header {
+        background: #fff;
+        color: #18181b;
+        border-color: #e4e4e7;
+      }
+      #omni-chat-window[data-theme="light"] #omni-chat-header .close-btn { color: #a1a1aa; }
+      #omni-chat-window[data-theme="light"] #omni-chat-header .close-btn:hover { background: #f4f4f5; color: #18181b; }
+      #omni-chat-window[data-theme="light"] .omni-header-btn { color: #a1a1aa; }
+      #omni-chat-window[data-theme="light"] .omni-header-btn:hover { background: #f4f4f5; color: #18181b; }
       #omni-chat-window[data-theme="light"] #omni-chat-messages {
-        background: #f5f5f5;
+        background: #fafafa;
       }
       #omni-chat-window[data-theme="light"] .omni-msg.visitor {
-        background: #e0e0e0;
-        color: #333;
+        background: #e4e4e7;
+        color: #18181b;
+      }
+      #omni-chat-window[data-theme="light"] .omni-msg.ai {
+        background: #fff;
+        color: #18181b;
+        border-color: #e4e4e7;
+      }
+      #omni-chat-window[data-theme="light"] .omni-msg.admin {
+        background: #dbeafe;
+        color: #18181b;
       }
       #omni-chat-window[data-theme="light"] #omni-chat-input {
         background: #fff;
-        border-color: #ddd;
-        color: #333;
+        border-color: #e4e4e7;
+        color: #18181b;
       }
       #omni-chat-window[data-theme="light"] #omni-chat-input::placeholder {
-        color: #999;
+        color: #a1a1aa;
       }
       #omni-chat-window[data-theme="light"] #omni-chat-input-area {
         background: #fff;
-        border-color: #ddd;
+        border-color: #e4e4e7;
       }
       #omni-chat-window[data-theme="light"] #omni-chat-status {
-        background: #f0f0f0;
-        color: #666;
+        background: #fafafa;
+        color: #71717a;
+        border-color: #e4e4e7;
       }
       #omni-chat-window[data-theme="light"] #omni-typing-indicator {
-        color: #666;
+        color: #71717a;
       }
+      #omni-chat-window[data-theme="light"] #omni-emoji-picker {
+        background: #fff;
+        border-color: #e4e4e7;
+      }
+      #omni-chat-window[data-theme="light"] .omni-emoji-btn:hover { background: #f4f4f5; }
       /* Pre-chat form */
       #omni-prechat-form {
         padding: 1.5rem;
-        background: #12121f;
+        background: #0f0f12;
         flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: 0.75rem;
       }
       #omni-prechat-form h3 {
-        color: #fff;
-        font-size: 1rem;
-        margin-bottom: 0.5rem;
+        color: #e4e4e7;
+        font-size: 0.95rem;
+        font-weight: 500;
+        margin-bottom: 0.25rem;
       }
       #omni-prechat-form p {
-        color: #888;
-        font-size: 0.85rem;
+        color: #71717a;
+        font-size: 0.8rem;
       }
       .omni-form-input {
         width: 100%;
-        padding: 0.75rem 1rem;
-        border: 1px solid #333;
+        padding: 0.625rem 0.875rem;
+        border: 1px solid #27272a;
         border-radius: 8px;
-        background: #1a1a2e;
-        color: #eee;
-        font-size: 14px;
+        background: #18181b;
+        color: #e4e4e7;
+        font-size: 13.5px;
       }
       .omni-form-input:focus {
         outline: none;
-        border-color: ${primaryColor};
+        border-color: #3f3f46;
       }
       .omni-form-btn {
-        padding: 0.75rem 1rem;
+        padding: 0.625rem 1rem;
         border: none;
         border-radius: 8px;
-        background: ${primaryColor};
-        color: #1a1a2e;
-        font-weight: 600;
+        background: #27272a;
+        color: #e4e4e7;
+        font-weight: 500;
+        font-size: 13.5px;
         cursor: pointer;
-        transition: opacity 0.2s;
+        transition: background 0.15s;
       }
-      .omni-form-btn:hover { opacity: 0.9; }
+      .omni-form-btn:hover { background: #3f3f46; }
       /* Admin status */
       #omni-admin-status {
         font-size: 11px;
         padding: 2px 8px;
         border-radius: 10px;
-        background: rgba(0,0,0,0.2);
+        color: #71717a;
+        font-weight: 400;
       }
       /* Emoji picker */
       #omni-emoji-picker {
@@ -552,14 +591,14 @@
         position: absolute;
         bottom: 100%;
         left: 0;
-        background: #1a1a2e;
-        border: 1px solid #333;
+        background: #18181b;
+        border: 1px solid #27272a;
         border-radius: 8px;
         padding: 8px;
         margin-bottom: 4px;
         width: 200px;
         flex-wrap: wrap;
-        gap: 4px;
+        gap: 2px;
         z-index: 10;
       }
       #omni-emoji-picker.show { display: flex; }
@@ -571,132 +610,143 @@
         font-size: 18px;
         cursor: pointer;
         border-radius: 4px;
-        transition: background 0.2s;
+        transition: background 0.15s;
       }
-      .omni-emoji-btn:hover { background: #333; }
+      .omni-emoji-btn:hover { background: #27272a; }
       #omni-emoji-toggle {
         background: transparent;
         border: none;
-        font-size: 20px;
+        font-size: 18px;
         cursor: pointer;
         padding: 4px;
+        opacity: 0.6;
+        transition: opacity 0.15s;
       }
+      #omni-emoji-toggle:hover { opacity: 1; }
       /* Feedback prompt */
       .omni-feedback-prompt {
-        background: #1a1a2e;
-        border: 1px solid #333;
-        border-radius: 12px;
+        background: #18181b;
+        border: 1px solid #27272a;
+        border-radius: 10px;
         padding: 1rem;
-        margin: 1rem 0;
+        margin: 0.75rem 0;
         text-align: center;
       }
       .omni-feedback-title {
-        font-weight: 600;
+        font-weight: 500;
         margin-bottom: 0.75rem;
-        color: #fff;
+        color: #e4e4e7;
+        font-size: 13.5px;
       }
       .omni-feedback-stars {
         display: flex;
         justify-content: center;
-        gap: 8px;
-        margin-bottom: 1rem;
+        gap: 6px;
+        margin-bottom: 0.75rem;
       }
       .omni-star {
         background: none;
         border: none;
-        font-size: 28px;
-        color: #444;
+        font-size: 24px;
+        color: #3f3f46;
         cursor: pointer;
         transition: color 0.15s, transform 0.15s;
         padding: 0;
       }
-      .omni-star:hover, .omni-star.hover { color: #ffd700; }
-      .omni-star.selected { color: #ffd700; }
-      .omni-star:hover { transform: scale(1.2); }
+      .omni-star:hover, .omni-star.hover { color: #fbbf24; }
+      .omni-star.selected { color: #fbbf24; }
+      .omni-star:hover { transform: scale(1.15); }
       .omni-feedback-comment {
         width: 100%;
-        padding: 0.75rem;
-        border: 1px solid #333;
+        padding: 0.625rem;
+        border: 1px solid #27272a;
         border-radius: 8px;
-        background: #12121f;
-        color: #eee;
+        background: #0f0f12;
+        color: #e4e4e7;
         font-size: 13px;
         resize: none;
-        margin-bottom: 0.75rem;
-        min-height: 60px;
+        margin-bottom: 0.625rem;
+        min-height: 50px;
       }
       .omni-feedback-comment:focus {
         outline: none;
-        border-color: ${primaryColor};
+        border-color: #3f3f46;
       }
       .omni-feedback-submit {
-        padding: 0.6rem 1.5rem;
+        padding: 0.5rem 1.25rem;
         border: none;
         border-radius: 8px;
-        background: ${primaryColor};
-        color: #1a1a2e;
-        font-weight: 600;
+        background: #27272a;
+        color: #e4e4e7;
+        font-weight: 500;
+        font-size: 13px;
         cursor: pointer;
-        transition: opacity 0.2s;
+        transition: background 0.15s;
       }
-      .omni-feedback-submit:hover { opacity: 0.9; }
+      .omni-feedback-submit:hover { background: #3f3f46; }
       .omni-feedback-thanks {
-        color: #2ed573;
-        font-weight: 600;
-        padding: 1rem;
+        color: #4ade80;
+        font-weight: 500;
+        padding: 0.75rem;
+        font-size: 13.5px;
       }
       #omni-chat-input-area {
-        padding: 1rem;
-        background: #1a1a2e;
-        border-top: 1px solid #2a2a4a;
+        padding: 0.75rem;
+        background: #18181b;
+        border-top: 1px solid #27272a;
         flex-shrink: 0;
       }
       #omni-chat-input {
         width: 100%;
-        padding: 0.75rem 1rem;
-        border: 1px solid #333;
-        border-radius: 12px;
-        background: #12121f;
-        color: #eee;
-        font-size: 14px;
+        padding: 0.625rem 0.875rem;
+        border: 1px solid #27272a;
+        border-radius: 10px;
+        background: #0f0f12;
+        color: #e4e4e7;
+        font-size: 13.5px;
         resize: none;
         line-height: 1.4;
       }
-      #omni-chat-input::placeholder { color: #666; }
+      #omni-chat-input::placeholder { color: #52525b; }
       #omni-chat-input:focus {
         outline: none;
-        border-color: ${primaryColor};
-        box-shadow: 0 0 0 2px ${primaryColor}33;
+        border-color: #3f3f46;
       }
       #omni-chat-actions {
         display: none;
-        gap: 0.5rem;
-        margin-top: 0.75rem;
+        gap: 0.375rem;
+        margin-top: 0.5rem;
       }
       #omni-chat-actions.show { display: flex; }
       .omni-action-btn {
         flex: 1;
-        padding: 0.7rem 1rem;
-        border: none;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #27272a;
         border-radius: 8px;
-        font-size: 13px;
-        font-weight: 600;
+        font-size: 12.5px;
+        font-weight: 500;
         cursor: pointer;
-        transition: transform 0.15s, opacity 0.15s;
+        transition: background 0.15s;
+        background: #18181b;
+        color: #a1a1aa;
       }
       .omni-action-btn:hover {
-        opacity: 0.9;
-        transform: translateY(-1px);
+        background: #27272a;
+        color: #e4e4e7;
       }
       .omni-action-btn:active { transform: translateY(0); }
       .omni-action-btn.human {
-        background: #2ed573;
-        color: #1a1a2e;
+        background: #18181b;
+        color: #4ade80;
+        border-color: #27272a;
       }
+      .omni-action-btn.human:hover { background: #27272a; }
       .omni-action-btn.ai {
-        background: linear-gradient(135deg, #7c3aed, #6366f1);
-        color: white;
+        background: #18181b;
+        color: #a1a1aa;
+        border-color: #27272a;
       }
+      .omni-action-btn.ai:hover { background: #27272a; color: #e4e4e7; }
     `;
     document.head.appendChild(styles);
 
@@ -820,7 +870,14 @@
         if (text) {
           sendMessage(text);
           input.value = '';
-          actions.classList.add('show');
+          if (chatMode === 'ai') {
+            // Auto-request AI response
+            socket.emit('visitor:request-ai');
+          } else if (chatMode === null) {
+            // First message — show mode buttons
+            actions.classList.add('show');
+          }
+          // If chatMode === 'human', just send and wait
         }
       }
     });
@@ -832,11 +889,13 @@
     });
 
     humanBtn.addEventListener('click', () => {
+      chatMode = 'human';
       socket.emit('visitor:request-human');
       actions.classList.remove('show');
     });
 
     aiBtn.addEventListener('click', () => {
+      chatMode = 'ai';
       socket.emit('visitor:request-ai');
       actions.classList.remove('show');
     });
