@@ -277,7 +277,7 @@
     // Inject styles
     const styles = document.createElement('style');
     styles.textContent = `
-      #omni-chat-widget * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+      #omni-chat-widget, #omni-chat-widget * { box-sizing: border-box !important; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important; }
       .omni-hidden { display: none !important; }
       #omni-chat-bubble {
         position: fixed;
@@ -382,21 +382,21 @@
         background: #27272a;
         color: #e4e4e7;
       }
-      #omni-chat-messages {
+      #omni-chat-widget #omni-chat-messages {
         flex: 1;
-        padding: 1.25rem 1rem;
+        padding: 1.5rem 1.25rem !important;
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        gap: 0.625rem;
+        gap: 1rem !important;
         background: #0f0f12;
       }
       #omni-chat-messages::-webkit-scrollbar { width: 4px; }
       #omni-chat-messages::-webkit-scrollbar-track { background: transparent; }
       #omni-chat-messages::-webkit-scrollbar-thumb { background: #27272a; border-radius: 2px; }
-      .omni-msg {
-        max-width: 82%;
-        padding: 0.75rem 1rem;
+      #omni-chat-widget .omni-msg {
+        max-width: 80%;
+        padding: 1rem 1.125rem !important;
         border-radius: 12px;
         font-size: 13.5px;
         line-height: 1.5;
