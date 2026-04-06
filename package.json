@@ -14,7 +14,7 @@
     "test:db": "node test-db-connection.js"
   },
   "dependencies": {
-    "dotenv": "^16.3.1",
+    "dotenv": "^17.4.1",
     "drizzle-kit": "^0.31.8",
     "drizzle-orm": "^0.45.1",
     "express": "^4.18.2",
